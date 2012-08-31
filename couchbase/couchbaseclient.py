@@ -163,6 +163,18 @@ class CommandDispatcher(object):
             except Exception, ex:
                 self._raise_if_recoverable(ex, item)
             item["event"].set()
+        elif item["operation"] == "setq":
+            key = item["key"]
+            expiry = item["expiry"]
+            flags = item["flags"]
+            value = item["value"]
+            try:
+                conn = self.vbaware.memcached(key, item["fastforward"])
+                item["response"]["return"] = conn.setq(key, expiry, flags,
+                                                      value)
+            except Exception, ex:
+                self._raise_if_recoverable(ex, item)
+            item["event"].set()
         elif item["operation"] == "add":
             key = item["key"]
             expiry = item["expiry"]
@@ -554,6 +566,12 @@ class CouchbaseClient(object):
                 "flags": flags, "value": value, "event": event, "response": {}}
         self.dispatcher.put(item)
         return self._respond(item, event)
+
+    def setq(self, key, expiry, flags, value):
+        event = Event()
+        item = {"operation": "setq", "key": key, "expiry": expiry,
+                "flags": flags, "value": value, "event": event, "response": {}}
+        self.dispatcher.put(item)
 
     def add(self, key, expiry, flags, value):
         event = Event()

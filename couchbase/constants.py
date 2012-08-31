@@ -34,6 +34,7 @@ class MemcachedConstants(object):
     CMD_GETQ = 9
     CMD_NOOP = 10
     CMD_VERSION = 11
+    CMD_SETQ = 0x11
     CMD_STAT = 0x10
     CMD_APPEND = 0x0e
     CMD_PREPEND = 0x0f

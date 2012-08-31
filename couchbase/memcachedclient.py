@@ -186,6 +186,17 @@ class MemcachedClient(object):
         return self._mutate(MemcachedConstants.CMD_SET, key, exp, flags, 0,
                             val)
 
+
+    def setq(self, key, exp, flags, val, vbucket=-1):
+
+        self._set_vbucket_id(key, vbucket)
+
+        opaque = self.r.randint(0, 2 ** 32)
+
+        extra=struct.pack(MemcachedConstants.SET_PKT_FMT, flags, exp)
+        self._sendCmd(MemcachedConstants.CMD_SETQ, key, val, opaque, extra)
+
+
     def add(self, key, exp, flags, val, vbucket=-1):
         """Add a value in the memcached server iff it doesn't already exist."""
         self._set_vbucket_id(key, vbucket)
