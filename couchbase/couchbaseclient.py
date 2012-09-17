@@ -23,6 +23,7 @@ import zlib
 import warnings
 import json
 from copy import deepcopy
+import itertools
 
 import requests
 
@@ -530,6 +531,9 @@ class CouchbaseClient(object):
         self.dispatcher.put(item)
         return self._respond(item, event)
 
+    def getq(self, key):
+        return self.memcached(key).getq(key)
+
     def gat(self, key, expiry):
         event = Event()
         item = {"operation": "gat", "key": key, "expiry": expiry,
@@ -568,10 +572,7 @@ class CouchbaseClient(object):
         return self._respond(item, event)
 
     def setq(self, key, expiry, flags, value):
-        event = Event()
-        item = {"operation": "setq", "key": key, "expiry": expiry,
-                "flags": flags, "value": value, "event": event, "response": {}}
-        self.dispatcher.put(item)
+        return self.memcached(key).setq(key, expiry, flags,value)
 
     def add(self, key, expiry, flags, value):
         event = Event()
@@ -593,6 +594,9 @@ class CouchbaseClient(object):
                 "response": {}}
         self.dispatcher.put(item)
         return self._respond(item, event)
+
+    def deleteq(self, key):
+        return self.memcached(key).deleteq(key)
 
     def prepend(self, key, value, cas=0):
         event = Event()
@@ -629,6 +633,20 @@ class CouchbaseClient(object):
         self.dispatcher.put(item)
         return self._respond(item, event)
 
+    def noop(self):
+        """ noop all servers """
+        for server in self._memcacheds:
+            rc = self._memcacheds[server].noop()
+
+
+    def recv_bulk_responses(self):
+        resp = []
+        for server in self._memcacheds:
+            rc = self._memcacheds[server].uncork()
+            if len(rc) > 0:
+                resp.append(rc)
+
+        return list(itertools.chain.from_iterable(resp))
 
 class VBucketAwareCouchbaseClient(CouchbaseClient):
     def __init__(self, host, username, password):

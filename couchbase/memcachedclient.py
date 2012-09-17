@@ -96,6 +96,15 @@ class MemcachedClient(object):
             "Got magic: %d" % magic
         return cmd, errcode, opaque, cas, keylen, extralen, rv
 
+    def _handleGenericResponse(self):
+        cmd, errcode, opaque, cas, keylen, extralen, rv = self._recvMsg()
+        return cmd, opaque, cas, keylen, extralen, rv
+
+    def _handleSingleGenericResponse(self):
+        cmd, opaque, cas, keylen, extralen, data =\
+            self._handleGenericResponse()
+        return opaque, cas, data
+
     def _handleKeyedResponse(self, myopaque):
         cmd, errcode, opaque, cas, keylen, extralen, rv = self._recvMsg()
         assert myopaque is None or opaque == myopaque, \
@@ -195,6 +204,7 @@ class MemcachedClient(object):
 
         extra=struct.pack(MemcachedConstants.SET_PKT_FMT, flags, exp)
         self._sendCmd(MemcachedConstants.CMD_SETQ, key, val, opaque, extra)
+        return opaque
 
 
     def add(self, key, exp, flags, val, vbucket=-1):
@@ -247,6 +257,14 @@ class MemcachedClient(object):
         parts = self._doCmd(MemcachedConstants.CMD_GET, key, '')
 
         return self._parse_get(parts)
+    def getq(self, key, vbucket=-1):
+        """Queitly get the value for a given key within the memcached server."""
+
+        self._set_vbucket_id(key, vbucket)
+
+        opaque = self.r.randint(0, 2 ** 32)
+        self._sendCmd(MemcachedConstants.CMD_GETQ, key, "", opaque)
+        return opaque
 
     def cas(self, key, exp, flags, oldVal, val, vbucket=-1):
         """CAS in a new value for the given key and comparison value."""
@@ -379,14 +397,45 @@ class MemcachedClient(object):
                 done = True
         return rv
 
+    def uncork(self):
+        """Send noops to node which (uncorks) I/O for retrieving results
+           from quiet commands"""
+        data = []
+        recv_opaque = - 1
+
+        # send noop
+        opaque = self.noop()
+        recv_opaque, cas, rv = self._handleSingleGenericResponse()
+
+        while recv_opaque != opaque:
+            # uncorked I/O response
+            data.append(recv_opaque)
+            recv_opaque, cas, rv = self._handleSingleGenericResponse()
+
+        return data
+
     def noop(self):
         """Send a noop command."""
-        return self._doCmd(MemcachedConstants.CMD_NOOP, '', '')
+        opaque = self.r.randint(0, 2 ** 32)
+        self._sendCmd(MemcachedConstants.CMD_NOOP, '', '', opaque)
+        return opaque
 
     def delete(self, key, cas=0, vbucket=-1):
         """Delete the value for a given key within the memcached server."""
         self._set_vbucket_id(key, vbucket)
         return self._doCmd(MemcachedConstants.CMD_DELETE, key, '', '', cas)
+
+
+    def deleteq(self, key, vbucket=-1):
+        """Queitly delete the value for a given key within the memcached server."""
+
+        self._set_vbucket_id(key, vbucket)
+
+        opaque = self.r.randint(0, 2 ** 32)
+        self._sendCmd(MemcachedConstants.CMD_DELETEQ, key, "", opaque)
+        return opaque
+
+
 
     def flush(self, timebomb=0):
         """Flush all storage in a memcached instance."""
