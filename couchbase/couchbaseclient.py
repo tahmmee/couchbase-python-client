@@ -42,7 +42,7 @@ class CommandDispatcher(object):
     def __init__(self, vbaware, verbose=False):
         #have a queue , in case of not my vbucket error
         #let's reinitialize the config/memcached socket connections ?
-        self.queue = Queue(10000)
+        self.queue = Queue(1000000)
         self.status = "initialized"
         self.vbaware = vbaware
         self.reconfig_callback = self.vbaware.reconfig_vbucket_map
