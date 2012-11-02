@@ -24,6 +24,7 @@ class MemcachedConstants(object):
     # Command constants
     CMD_GET = 0
     CMD_SET = 1
+    CMD_SETQ = 0x11
     CMD_ADD = 2
     CMD_REPLACE = 3
     CMD_DELETE = 4
@@ -35,7 +36,6 @@ class MemcachedConstants(object):
     CMD_GETQ = 9
     CMD_NOOP = 10
     CMD_VERSION = 11
-    CMD_SETQ = 0x11
     CMD_STAT = 0x10
     CMD_APPEND = 0x0e
     CMD_PREPEND = 0x0f

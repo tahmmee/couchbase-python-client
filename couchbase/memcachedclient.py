@@ -100,10 +100,12 @@ class MemcachedClient(object):
         cmd, errcode, opaque, cas, keylen, extralen, rv = self._recvMsg()
         return cmd, opaque, cas, keylen, extralen, rv
 
+
     def _handleSingleGenericResponse(self):
         cmd, opaque, cas, keylen, extralen, data =\
             self._handleGenericResponse()
         return opaque, cas, data
+
 
     def _handleKeyedResponse(self, myopaque):
         cmd, errcode, opaque, cas, keylen, extralen, rv = self._recvMsg()
@@ -195,7 +197,6 @@ class MemcachedClient(object):
         return self._mutate(MemcachedConstants.CMD_SET, key, exp, flags, 0,
                             val)
 
-
     def setq(self, key, exp, flags, val, vbucket=-1):
 
         self._set_vbucket_id(key, vbucket)
@@ -205,7 +206,6 @@ class MemcachedClient(object):
         extra=struct.pack(MemcachedConstants.SET_PKT_FMT, flags, exp)
         self._sendCmd(MemcachedConstants.CMD_SETQ, key, val, opaque, extra)
         return opaque
-
 
     def add(self, key, exp, flags, val, vbucket=-1):
         """Add a value in the memcached server iff it doesn't already exist."""
@@ -257,6 +257,7 @@ class MemcachedClient(object):
         parts = self._doCmd(MemcachedConstants.CMD_GET, key, '')
 
         return self._parse_get(parts)
+
     def getq(self, key, vbucket=-1):
         """Queitly get the value for a given key within the memcached server."""
 
@@ -414,6 +415,7 @@ class MemcachedClient(object):
 
         return data
 
+
     def noop(self):
         """Send a noop command."""
         opaque = self.r.randint(0, 2 ** 32)
@@ -425,7 +427,6 @@ class MemcachedClient(object):
         self._set_vbucket_id(key, vbucket)
         return self._doCmd(MemcachedConstants.CMD_DELETE, key, '', '', cas)
 
-
     def deleteq(self, key, vbucket=-1):
         """Queitly delete the value for a given key within the memcached server."""
 
@@ -434,7 +435,6 @@ class MemcachedClient(object):
         opaque = self.r.randint(0, 2 ** 32)
         self._sendCmd(MemcachedConstants.CMD_DELETEQ, key, "", opaque)
         return opaque
-
 
 
     def flush(self, timebomb=0):

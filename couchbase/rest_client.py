@@ -174,7 +174,7 @@ class RestConnection(object):
 
         self.base_url = "http://{0}:{1}".format(self.ip, self.port)
         server_config_uri = ''.join([self.base_url, '/pools/default'])
-        self.config = requests.get(server_config_uri).json
+        self.config = requests.get(server_config_uri, auth=(self.username,self.password)).json
         # if couchApiBase is not set earlier, let's look it up
         if self.couch_api_base is None:
             #couchApiBase is not in node config before Couchbase Server 2.0
@@ -279,7 +279,7 @@ class RestConnection(object):
             return {'Content-Type': 'application/x-www-form-urlencoded',
                     'Accept': '*/*'}
 
-    def _http_request(self, api, method='GET', params='', headers=None,
+    def _http_request(self, api, method='GET', params=None, headers=None,
                       timeout=120, base=None):
         if base is None:
             base = self.base_url
@@ -1053,13 +1053,8 @@ class RestParser(object):
         bucket.saslPassword = parsed["saslPassword"]
         if 'controllers' in parsed:
             bucket.controllers = parsed['controllers']
-        else:
-            bucket.controllers = []
         if 'ddocs' in parsed:
             bucket.ddocs = parsed['ddocs']
-        else:
-            bucket.ddocs = []
-
         bucket.nodes = list()
         if 'vBucketServerMap' in parsed:
             vBucketServerMap = parsed['vBucketServerMap']

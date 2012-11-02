@@ -164,18 +164,6 @@ class CommandDispatcher(object):
             except Exception, ex:
                 self._raise_if_recoverable(ex, item)
             item["event"].set()
-        elif item["operation"] == "setq":
-            key = item["key"]
-            expiry = item["expiry"]
-            flags = item["flags"]
-            value = item["value"]
-            try:
-                conn = self.vbaware.memcached(key, item["fastforward"])
-                item["response"]["return"] = conn.setq(key, expiry, flags,
-                                                      value)
-            except Exception, ex:
-                self._raise_if_recoverable(ex, item)
-            item["event"].set()
         elif item["operation"] == "add":
             key = item["key"]
             expiry = item["expiry"]
@@ -362,7 +350,7 @@ class CouchbaseClient(object):
         response = requests.get("http://%s:%s/pools/default/buckets"
                                 "Streaming/%s" % (self.servers[0]["ip"],
                                                   self.servers[0]["port"],
-                                                  self.bucket.name))
+                                                  self.bucket.name), auth=(self.rest_username, self.rest_password))
         for line in response.iter_lines():
             if line:
                 data = json.loads(line)
@@ -647,6 +635,8 @@ class CouchbaseClient(object):
                 resp.append(rc)
 
         return list(itertools.chain.from_iterable(resp))
+
+
 
 class VBucketAwareCouchbaseClient(CouchbaseClient):
     def __init__(self, host, username, password):
