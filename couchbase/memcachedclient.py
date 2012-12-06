@@ -98,13 +98,13 @@ class MemcachedClient(object):
 
     def _handleGenericResponse(self):
         cmd, errcode, opaque, cas, keylen, extralen, rv = self._recvMsg()
-        return cmd, opaque, cas, keylen, extralen, rv
+        return cmd, opaque, cas, keylen, extralen, rv, errcode
 
 
     def _handleSingleGenericResponse(self):
-        cmd, opaque, cas, keylen, extralen, data =\
+        cmd, opaque, cas, keylen, extralen, data, errcode =\
             self._handleGenericResponse()
-        return opaque, cas, data
+        return opaque, cas, data, errcode
 
 
     def _handleKeyedResponse(self, myopaque):
@@ -406,12 +406,12 @@ class MemcachedClient(object):
 
         # send noop
         opaque = self.noop()
-        recv_opaque, cas, rv = self._handleSingleGenericResponse()
+        recv_opaque, cas, rv, errcode = self._handleSingleGenericResponse()
 
         while recv_opaque != opaque:
             # uncorked I/O response
-            data.append(recv_opaque)
-            recv_opaque, cas, rv = self._handleSingleGenericResponse()
+            data.append({"opaque": recv_opaque, "rv": rv, "error": errcode})
+            recv_opaque, cas, rv, errcode = self._handleSingleGenericResponse()
 
         return data
 
