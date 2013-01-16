@@ -175,6 +175,13 @@ class RestConnection(object):
         self.base_url = "http://{0}:{1}".format(self.ip, self.port)
         server_config_uri = ''.join([self.base_url, '/pools/default'])
         self.config = requests.get(server_config_uri, auth=(self.username,self.password)).json
+
+        # fix for 2.7 .json of request returns a method
+        try:
+            self.config["nodes"]
+        except TypeError:
+            self.config = self.config()
+
         # if couchApiBase is not set earlier, let's look it up
         if self.couch_api_base is None:
             #couchApiBase is not in node config before Couchbase Server 2.0
