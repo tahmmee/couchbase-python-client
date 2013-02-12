@@ -86,10 +86,10 @@ class RestHelper(object):
         self.rest.rebalance(knownNodes, ejectedNodes)
         return self.rest.monitorRebalance()
 
-    def vbucket_map_ready(self, bucket, timeout_in_seconds=360):
+    def vbucket_map_ready(self, bucket, timeout_in_seconds=360, forward=False):
         end_time = time.time() + timeout_in_seconds
         while time.time() <= end_time:
-            vBuckets = self.rest.get_vbuckets(bucket)
+            vBuckets = self.rest.get_vbuckets(bucket, forward)
             if vBuckets:
                 return True
             else:
@@ -707,8 +707,11 @@ class RestConnection(object):
 
         return bucketInfo
 
-    def get_vbuckets(self, bucket='default'):
-        return self.get_bucket(bucket).vbuckets
+    def get_vbuckets(self, bucket='default', forward=False):
+        if forward:
+            return self.get_bucket(bucket).forward_map
+        else:
+            return self.get_bucket(bucket).vbuckets
 
     def delete_bucket(self, bucket='default'):
         api = '/pools/default/buckets/{0}'.format(bucket)

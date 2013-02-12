@@ -445,7 +445,8 @@ class CouchbaseClient(object):
 
     def reconfig_vbucket_map(self, vbucket=-1):
         vb_ready = RestHelper(self.rest).vbucket_map_ready(self.bucket.name,
-                                                           60)
+                                                           60,
+                                                           True)
         if not vb_ready:
             raise Exception("vbucket map is not ready for bucket %s" %
                             (self.bucket.name))
