@@ -443,10 +443,10 @@ class CouchbaseClient(object):
                                                 serverPort,
                                                 self.bucket.name)
 
-    def reconfig_vbucket_map(self, vbucket=-1):
+    def reconfig_vbucket_map(self, vbucket=-1, forward=False):
         vb_ready = RestHelper(self.rest).vbucket_map_ready(self.bucket.name,
                                                            60,
-                                                           True)
+                                                           forward)
         if not vb_ready:
             raise Exception("vbucket map is not ready for bucket %s" %
                             (self.bucket.name))
